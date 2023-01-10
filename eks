@@ -1,0 +1,32 @@
+import boto3
+import subprocess
+
+# AWS access key and secret key
+access_key = "ACCESS_KEY"
+secret_key = "SECRET_KEY"
+
+# URL of the external script to download
+script_url = "https://example.com/script.sh"
+
+# Create the boto3 client to interact with EKS
+client = boto3.client('eks',
+    aws_access_key_id=access_key,
+    aws_secret_access_key=secret_key
+)
+
+# Create the EKS cluster
+response = client.create_cluster(
+    name='my-cluster',
+    version='1.19',
+    roleArn='arn:aws:iam::012345678910:role/eksServiceRole'
+)
+
+# Wait for the cluster to be active
+client.get_waiter('cluster_active').wait(name='my-cluster')
+
+# Download the external script
+subprocess.run(["curl", "-O", script_url])
+
+# Print the cluster details
+response = client.describe_cluster(name='my-cluster')
+print(response)
