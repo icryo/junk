@@ -1,0 +1,24 @@
+import boto3
+
+# Set AWS access keys
+AWS_ACCESS_KEY_ID = 'ACCESS_KEY'
+AWS_SECRET_ACCESS_KEY = 'SECRET_KEY'
+
+# Set the region for the EC2 instances
+region = 'us-east-1'
+
+# Create a session with the specified access keys and region
+session = boto3.Session(
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=region
+)
+
+# Create an EC2 client
+ec2 = session.client('ec2')
+
+# List all instances
+response = ec2.describe_instances()
+for reservation in response["Reservations"]:
+    for instance in reservation["Instances"]:
+        print(instance["InstanceId"])
