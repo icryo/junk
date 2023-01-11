@@ -1,0 +1,20 @@
+import boto3
+
+# create an SSM client
+ssm = boto3.client('ssm')
+
+# enumerate all instances in the environment
+ec2 = boto3.resource('ec2')
+instances = ec2.instances.filter(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+
+# run the external script on each instance
+for instance in instances:
+    instance_id = instance.instance_id
+    response = ssm.send_command(
+        InstanceIds=[instance_id],
+        DocumentName='AWS-RunShellScript',
+        Parameters={
+            'commands': ['./path/to/external_script.sh']
+        }
+    )
+    print(f'Ran command on instance {instance_id} with command id: {response["Command"]["CommandId"]}')
