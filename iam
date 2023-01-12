@@ -17,3 +17,12 @@ for reservation in instances['Reservations']:
     for instance in reservation['Instances']:
         instance_id = instance['InstanceId']
         iam_client.attach_role_policy(RoleName=instance_id, PolicyArn=policy_arn)
+        
+        # Create an SSM client
+        ssm_client = boto3.client('ssm')
+        
+        # Example command to run on instances
+        command = 'echo "Hello World"'
+        
+        # Execute the command on the instance
+        ssm_client.send_command(InstanceIds=[instance_id], DocumentName='AWS-RunShellScript', Parameters={'commands': [command]})
