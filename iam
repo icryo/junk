@@ -9,8 +9,8 @@ policy_arn = iam_client.get_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonSSMF
 # Create an EC2 client
 ec2_client = boto3.client('ec2')
 
-# Get all instances in the account
-instances = ec2_client.describe_instances()
+# Get all running instances in the account
+instances = ec2_client.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
 
 # Iterate through the instances and attach the AmazonSSMFullAccess policy
 for reservation in instances['Reservations']:
