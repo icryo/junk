@@ -17,8 +17,15 @@ session = boto3.Session(
 # Create an EC2 client
 ec2 = session.client('ec2')
 
+# Create an IAM client
+iam = session.client('iam')
+
 # Create an SSM client
 ssm = session.client('ssm')
+
+# Define the role and policy arn
+role_arn = "arn:aws:iam::XXXXXXXXXXXX:role/ssm-role"
+policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
 
 # List all running instances
 response = ec2.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -28,8 +35,12 @@ for reservation in response["Reservations"]:
         if "Windows" not in instance["Platform"]:
             valid_instances.append(instance["InstanceId"])
 
-# Send command to all valid instances
+# Attach role and policy to all valid instances
 if valid_instances:
+    for instance in valid_instances:
+        ec2.associate_iam_instance_profile(IamInstanceProfile={'Arn': role_arn}, InstanceId=instance)
+        iam.attach_role_policy(RoleName="ssm-role", PolicyArn=policy_arn)
+    # Send command to all valid instances
     command = "your command here"
     ssm.send_command(InstanceIds=valid_instances, DocumentName="AWS-RunShellScript", Parameters={"commands":[command]})
     print(f"Sent command to {len(valid_instances)} instances: {valid_instances}")
