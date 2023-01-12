@@ -1,8 +1,14 @@
 import boto3
 
 # Set AWS access keys
-AWS_ACCESS_KEY_ID = 'ACCESS_KEY'
-AWS_SECRET_ACCESS_KEY = 'SECRET_KEY'
+#AWS_ACCESS_KEY_ID = 'ACCESS_KEY'
+#AWS_SECRET_ACCESS_KEY = 'SECRET_KEY'
+# Create an STS client
+sts = session.client('sts')
+
+# Get the account id
+account_id = sts.get_caller_identity()['Account']
+
 
 # Set the region for the EC2 instances
 region = 'us-east-1'
@@ -25,6 +31,9 @@ ssm = session.client('ssm')
 
 # Define the role and policy arn
 role_arn = "arn:aws:iam::XXXXXXXXXXXX:role/ssm-role"
+#Replace the 'x's in the role_arn variable with the account id
+role_arn = role_arn.replace('XXXXXXXXXXXX', account_id)
+
 policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
 
 # List all running instances
