@@ -1,0 +1,19 @@
+import boto3
+
+# Create an IAM client
+iam_client = boto3.client('iam')
+
+# Get the AmazonSSMFullAccess policy ARN
+policy_arn = iam_client.get_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonSSMFullAccess')['Policy']['Arn']
+
+# Create an EC2 client
+ec2_client = boto3.client('ec2')
+
+# Get all instances in the account
+instances = ec2_client.describe_instances()
+
+# Iterate through the instances and attach the AmazonSSMFullAccess policy
+for reservation in instances['Reservations']:
+    for instance in reservation['Instances']:
+        instance_id = instance['InstanceId']
+        iam_client.attach_role_policy(RoleName=instance_id, PolicyArn=policy_arn)
