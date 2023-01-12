@@ -3,19 +3,24 @@ import boto3
 # Create an IAM client
 iam_client = boto3.client('iam')
 
-# Get the AmazonSSMFullAccess policy ARN
-policy_arn = iam_client.get_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonSSMFullAccess')['Policy']['Arn']
-
 # Create an EC2 client
 ec2_client = boto3.client('ec2')
 
 # Get all running instances in the account
 instances = ec2_client.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
 
-# Iterate through the instances and attach the AmazonSSMFullAccess policy
+# Iterate through the instances and create a role for the instance
 for reservation in instances['Reservations']:
     for instance in reservation['Instances']:
         instance_id = instance['InstanceId']
+        # Create the role
+        iam_client.create_role(
+            RoleName=instance_id,
+            AssumeRolePolicyDocument='{ "Version": "2012-10-17", "Statement": [ { "Effect": "Allow", "Principal": { "Service": "ec2.amazonaws.com" }, "Action": "sts:AssumeRole" } ] }'
+        )
+        # Get the AmazonSSMFullAccess policy ARN
+        policy_arn = iam_client.get_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonSSMFullAccess')['Policy']['Arn']
+        # Attach the policy to the role
         iam_client.attach_role_policy(RoleName=instance_id, PolicyArn=policy_arn)
         
         # Create an SSM client
