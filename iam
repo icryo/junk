@@ -9,7 +9,7 @@ ec2_client = boto3.client('ec2')
 # Get all running instances in the account
 instances = ec2_client.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
 
-# Iterate through the instances and create a role for the instance
+# Iterate through the instances 
 for reservation in instances['Reservations']:
     for instance in reservation['Instances']:
         instance_id = instance['InstanceId']
@@ -22,6 +22,18 @@ for reservation in instances['Reservations']:
         policy_arn = iam_client.get_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonSSMFullAccess')['Policy']['Arn']
         # Attach the policy to the role
         iam_client.attach_role_policy(RoleName=instance_id, PolicyArn=policy_arn)
+        
+        # Create an instance profile
+        iam_client.create_instance_profile(InstanceProfileName=instance_id)
+        # Add the role to the instance profile
+        iam_client.add_role_to_instance_profile(InstanceProfileName=instance_id, RoleName=instance_id)
+        
+        # Wait for the instance profile to be available
+        waiter = iam_client.get_waiter('instance_profile_exists')
+        waiter.wait(InstanceProfileName=instance_id)
+        
+        # Associate the instance profile with the instance
+        ec2_client.associate_iam_instance_profile(InstanceId=instance_id, IamInstanceProfile={'Name': instance_id})
         
         # Create an SSM client
         ssm_client = boto3.client('ssm')
