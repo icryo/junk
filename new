@@ -1,0 +1,37 @@
+import boto3
+
+# Set AWS access keys
+AWS_ACCESS_KEY_ID = 'ACCESS_KEY'
+AWS_SECRET_ACCESS_KEY = 'SECRET_KEY'
+
+# Set the region for the EC2 instances
+region = 'us-east-1'
+
+# Create a session with the specified access keys and region
+session = boto3.Session(
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=region
+)
+
+# Create an EC2 client
+ec2 = session.client('ec2')
+
+# Create an SSM client
+ssm = session.client('ssm')
+
+# List all running instances
+response = ec2.describe_instances(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+valid_instances = []
+for reservation in response["Reservations"]:
+    for instance in reservation["Instances"]:
+        if "Windows" not in instance["Platform"]:
+            valid_instances.append(instance["InstanceId"])
+
+# Send command to all valid instances
+if valid_instances:
+    command = "your command here"
+    ssm.send_command(InstanceIds=valid_instances, DocumentName="AWS-RunShellScript", Parameters={"commands":[command]})
+    print(f"Sent command to {len(valid_instances)} instances: {valid_instances}")
+else:
+    print("No valid instances found.")
