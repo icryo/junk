@@ -1,0 +1,12 @@
+role_arn = f"arn:aws:iam::{iam.get_user()['User']['Arn'].split(':')[4]}:role/{role_name}"
+policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+
+# Create the role if it does not exist
+try:
+    iam.get_role(RoleName=role_name)
+except iam.exceptions.NoSuchEntityException:
+    iam.create_role(
+        RoleName=role_name,
+        AssumeRolePolicyDocument='{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]}'
+    )
+    iam.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
