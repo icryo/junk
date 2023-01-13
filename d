@@ -1,13 +1,15 @@
 import boto3
 
-# Initialize the EC2 client
-ec2 = boto3.client('ec2')
+# create an IAM client
+iam = boto3.client('iam')
 
-# Define the instance ID
-instance_id = 'i-1234567890abcdef0'
+# set the role name
+role_name = 'my_role_name'
 
-# Get the association IDs of all IAM instance profiles associated with the instance
-response = ec2.describe_iam_instance_profile_associations(InstanceId=instance_id)
-association_ids = [association['AssociationId'] for association in response['IamInstanceProfileAssociations']]
+# list all policies attached to the role
+attached_policies = iam.list_attached_role_policies(RoleName=role_name)['AttachedPolicies']
 
-print(f'Association IDs associated with the instance {instance_id} : {association_ids}')
+# iterate through the policies and detach them from the role
+for policy in attached_policies:
+    iam.detach_role_policy(RoleName=role_name, PolicyArn=policy['PolicyArn'])
+    print(f'Successfully detached policy {policy["PolicyName"]} from role {role_name}')
